@@ -1,5 +1,6 @@
 from enum import Enum
 import numpy as np
+import random
 
 
 class Action(Enum):
@@ -50,7 +51,7 @@ def shiftValues(row):
     return nextRow
 
 
-def act(board, action):
+def shiftBoard(board, action):
     # assume that the board is square
     # can adjust to support rectangular boards or irregular size rows
     assert isinstance(board, np.ndarray), \
@@ -69,3 +70,20 @@ def act(board, action):
     else:
         for i in range(shape[0]):
             board[i, :] = shiftValues(board[i, :])
+
+
+def randomBlock():
+    return random.choice([1, 2])
+
+
+def addRandomBlock(board):
+    zeroIndecies = np.transpose(np.where(board == 0))
+    if zeroIndecies.shape[0] == 0:
+        return
+    index = random.choice(zeroIndecies)
+    board[index[0], index[1]] = randomBlock()
+
+
+def act(board, action):
+    shiftBoard(board, action)
+    addRandomBlock(board)
