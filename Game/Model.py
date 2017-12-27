@@ -10,7 +10,7 @@ class Action(Enum):
 
 
 def makeBoard(rows, columns, startVal):
-    return [[startVal for x in range(columns)] for y in range(rows)]
+    return np.array([[startVal for x in range(columns)] for y in range(rows)])
 
 
 def emptyBoard():
