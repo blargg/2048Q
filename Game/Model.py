@@ -28,18 +28,23 @@ def shiftValues(row):
     Merged values increment by one from the pre-merge values
     Assumes all values are numeric.
     """
+    assert all([elem >= 0 for elem in row]),\
+        "all the elements must be greater than one"
     nextRow = []
-    lastValue = 0
+    lastValue = None
     for val in row:
-        if lastValue == 0:
+        if val == 0:
+            pass
+        elif lastValue is None:
             lastValue = val
         elif lastValue == val:
-            lastValue = 0
+            lastValue = None
             nextRow.append(val+1)
         else:
             nextRow.append(lastValue)
             lastValue = val
-    nextRow.append(lastValue)
+    if lastValue is not None:
+        nextRow.append(lastValue)
     lendiff = len(row) - len(nextRow)
     nextRow.extend([0 for x in range(lendiff)])
     return nextRow
