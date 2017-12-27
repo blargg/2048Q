@@ -87,3 +87,25 @@ def addRandomBlock(board):
 def act(board, action):
     shiftBoard(board, action)
     addRandomBlock(board)
+
+
+def isGameOver(board):
+    """Game ends when there is no way to shift the board to make empty
+    spaces"""
+    left = shiftBoard(board.copy(), Action.LEFT)
+    if np.any(left == 0):
+        return False
+
+    right = shiftBoard(board.copy(), Action.RIGHT)
+    if np.any(right == 0):
+        return False
+
+    up = shiftBoard(board.copy(), Action.UP)
+    if np.any(up == 0):
+        return False
+
+    down = shiftBoard(board.copy(), Action.DOWN)
+    if np.any(down == 0):
+        return False
+
+    return True
