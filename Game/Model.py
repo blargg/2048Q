@@ -92,19 +92,23 @@ def act(board, action):
 def isGameOver(board):
     """Game ends when there is no way to shift the board to make empty
     spaces"""
-    left = shiftBoard(board.copy(), Action.LEFT)
+    left = board.copy()
+    shiftBoard(left, Action.LEFT)
     if np.any(left == 0):
         return False
 
-    right = shiftBoard(board.copy(), Action.RIGHT)
+    right = board.copy()
+    shiftBoard(right, Action.RIGHT)
     if np.any(right == 0):
         return False
 
-    up = shiftBoard(board.copy(), Action.UP)
+    up = board.copy()
+    shiftBoard(up, Action.UP)
     if np.any(up == 0):
         return False
 
-    down = shiftBoard(board.copy(), Action.DOWN)
+    down = board.copy()
+    shiftBoard(down, Action.DOWN)
     if np.any(down == 0):
         return False
 
