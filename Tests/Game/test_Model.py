@@ -32,5 +32,5 @@ def test_shiftValues():
 
 
 def test_game_over():
-    endGameBoard = np.array(range(16)).reshape((4, 4))
+    endGameBoard = np.array(range(1, 17)).reshape((4, 4))
     assert isGameOver(endGameBoard), "No way to make empty space; game over"
