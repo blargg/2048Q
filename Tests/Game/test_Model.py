@@ -1,7 +1,9 @@
 from hypothesis import given
 import hypothesis.strategies as st
 
-from Game.Model import shiftValues
+import numpy as np
+
+from Game.Model import shiftValues, isGameOver
 
 
 @given(st.lists(st.integers(0, 100)))
@@ -27,3 +29,8 @@ def test_shiftValues():
     initial = [1, 1, 0, 2, 0, 2, 2, 2]
     result = shiftValues(initial)
     assert result == [2, 3, 3, 0, 0, 0, 0, 0], "Must match this example case"
+
+
+def test_game_over():
+    endGameBoard = np.array(range(16)).reshape((4, 4))
+    assert isGameOver(endGameBoard), "No way to make empty space; game over"
