@@ -18,6 +18,12 @@ def emptyBoard():
     return makeBoard(4, 4, 0)
 
 
+def newBoard():
+    board = emptyBoard()
+    addRandomBlock(board)
+    return board
+
+
 def printBoard(board):
     for row in board:
         print(row)
