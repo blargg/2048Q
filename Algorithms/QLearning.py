@@ -24,16 +24,30 @@ class ReinforcementTask:
     def startState():
         raise NotImplementedError("Function not implemented")
 
+    def isEndState(state):
+        raise NotImplementedError("Function not implemented")
+
 
 class ReinforcementLearner:
     """Defines a learning algorithm that can be trained on reinformcement
     tasks"""
-    def choseAction(state):
+    def chooseAction(self, state):
         raise NotImplementedError("Fucntion not implemented")
 
-    def observeResult(previousState, action, nextState, reward):
+    def observeResult(self, state, action, nextState, reward):
         raise NotImplementedError("Function not implemented")
 
 
-def qLearnStep(learner, task, state):
+def LearnStep(learner, task, state):
+    chosenAction = learner.chooseAction(state)
+    startState = state.copy()
+    task.transition(state, chosenAction)
+    reward = task.reward(startState, chosenAction)
+    learner.observeResult(startState, chosenAction, state, reward)
     pass
+
+
+def LearnEpisode(learner, task):
+    state = task.startState()
+    while not task.isEndState(state):
+        LearnStep(learner, task, state)
