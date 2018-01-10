@@ -1,5 +1,5 @@
 from Algorithms.QLearning import ReinforcementLearner
-from Util.random import bernoulli
+from util.random import bernoulli
 import random
 
 
