@@ -31,7 +31,8 @@ class LineTask(ReinforcementTask):
 
     def reward(state, action):
         baseReward = 1 / (1 + abs(action))
-        noise = random.normalvariate(0, 0.1)
+        # noise = random.normalvariate(0, 0.01)
+        noise = 0
         return baseReward + noise
 
     def startState():
@@ -40,3 +41,13 @@ class LineTask(ReinforcementTask):
     def actions(state):
         location = state.value
         return [action for action in range(location - 1, location + 2)]
+
+    def isEndState(state):
+        if state.value < -9:
+            return True
+        if state.value > 9:
+            return True
+        if state.value == 0:
+            return True
+
+        return False
