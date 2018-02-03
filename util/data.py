@@ -6,3 +6,7 @@ def dictStringArray(d):
 def printDict(d):
     for s in dictStringArray(d):
         print(s)
+
+
+def do_nothing(*kwargs):
+    pass

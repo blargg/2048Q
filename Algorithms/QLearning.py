@@ -11,6 +11,9 @@
 # Transitions define how actions lead from one state to another
 #   transition: State X Action -> State
 
+import pickle
+from util.data import do_nothing
+
 
 class ReinforcementTask:
     """Defines a reinforcement learning task. This is an abstract interface to
@@ -44,10 +47,26 @@ def LearnStep(learner, task, state):
     task.transition(state, chosenAction)
     reward = task.reward(startState, chosenAction)
     learner.observeResult(startState, chosenAction, state, reward)
-    pass
+    return chosenAction
 
 
-def LearnEpisode(learner, task):
+def LearnEpisode(learner, task, logState=do_nothing):
     state = task.startState()
     while not task.isEndState(state):
-        LearnStep(learner, task, state)
+        copyState = state.copy()
+        action = LearnStep(learner, task, state)
+        logState(copyState, action)
+
+    logState(state, None)
+
+
+def LearnEpisodeSaveFile(learner, task, filename):
+    episodeRecord = []
+
+    def logState(state, action):
+        episodeRecord.append((state, action))
+
+    LearnEpisode(learner, task, logState)
+
+    with open(filename, "wb") as f:
+        pickle.dump(episodeRecord, f)  # TODO concider a safter alternative
