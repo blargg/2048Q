@@ -23,6 +23,8 @@ class LineState:
         return "<Line State " + str(self.value) + ">"
 
 
+# TODO it's pretty unclear that we have to call from the class, rather than
+# an instanciated object
 class LineTask(ReinforcementTask):
     """Simple task, where states are the numbers on the number line, actions
     are numbers to jump to. Higher rewards for getting close to 0"""
