@@ -3,7 +3,10 @@ import hypothesis.strategies as st
 
 import numpy as np
 
-from Game.Model import shiftValues, isGameOver
+from Game.Model import shiftValues, isGameOver, shiftBoard, Action
+
+
+actions = st.sampled_from([Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT])
 
 
 @given(st.lists(st.integers(0, 100)))
@@ -34,3 +37,44 @@ def test_shiftValues():
 def test_game_over():
     endGameBoard = np.array(range(1, 17)).reshape((4, 4))
     assert isGameOver(endGameBoard), "No way to make empty space; game over"
+
+
+def rotate_board(board):
+    """Takes a list and returns array"""
+    arr = np.array(board)
+    assert arr.shape[0] == arr.shape[1],\
+        "rotate can only be called on square arrays"
+    rotated = np.flip(arr.transpose(), 1)
+    return rotated
+
+
+def rotate_action(action):
+    if action == Action.UP:
+        return Action.RIGHT
+    if action == Action.DOWN:
+        return Action.LEFT
+    if action == Action.LEFT:
+        return Action.UP
+    if action == Action.RIGHT:
+        return Action.DOWN
+    return None
+
+
+def listOfSize(elements, size):
+    return st.lists(elements, min_size=size, max_size=size)
+
+
+@given(actions,
+       listOfSize(listOfSize(st.integers(0, 100), 4), 4))
+def test_rotationalSym(action, board):
+    board1 = np.array(board)
+    board2 = rotate_board(board1.copy())
+    action1 = action
+    action2 = rotate_action(action)
+
+    shiftBoard(board1, action1)
+    board1 = rotate_board(board1)
+
+    shiftBoard(board2, action2)
+
+    assert np.array_equal(board1, board2), "boards must equal after rotation"
