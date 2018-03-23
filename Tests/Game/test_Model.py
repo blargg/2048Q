@@ -23,6 +23,21 @@ def test_shift_ends_with_zeros(xs):
 
 
 @given(st.lists(st.integers(0, 100)))
+def test_shift_perserves_sq_sum(xs):
+
+    def sq_sum(list):
+        # need to filter out 0, because they represent empty sq, rather than 0
+        ls = filter(lambda x: x > 0, list)
+        return sum([2 ** l for l in ls])
+
+    original_sum = sq_sum(xs)
+    shifted = shiftValues(xs)
+    shifted_sum = sq_sum(shifted)
+    assert original_sum == shifted_sum,\
+        "Sum of squares elements should not change after shifting"
+
+
+@given(st.lists(st.integers(0, 100)))
 def test_always_same_length(xs):
     lst = shiftValues(xs)
     assert len(lst) == len(xs)
