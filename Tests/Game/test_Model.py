@@ -4,9 +4,16 @@ import hypothesis.strategies as st
 import numpy as np
 
 from Game.Model import shiftValues, isGameOver, shiftBoard, Action
+import Game.Model as g
 
-
+# sampling strategies
 actions = st.sampled_from([Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT])
+
+
+@given(st.integers(0, 3))
+def test_index_iso_to_action(index):
+    assert index == g.toIndex(g.fromIndex(index)),\
+        "toIndex and fromIndex should be isomorphic"
 
 
 @given(st.lists(st.integers(0, 100)))

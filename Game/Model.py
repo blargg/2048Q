@@ -1,13 +1,32 @@
-from enum import Enum
+from enum import Enum, unique
 import numpy as np
 import random
 
 
+@unique
 class Action(Enum):
     UP = 1
     DOWN = 2
     LEFT = 3
     RIGHT = 4
+
+
+def toIndex(action):
+    lookup = {Action.UP: 0,
+              Action.DOWN: 1,
+              Action.LEFT: 2,
+              Action.RIGHT: 3}
+    return lookup.get(action)
+    pass
+
+
+def fromIndex(index):
+    lookup = {0: Action.UP,
+              1: Action.DOWN,
+              2: Action.LEFT,
+              3: Action.RIGHT}
+    return lookup.get(index)
+    pass
 
 
 def makeBoard(rows, columns, startVal):
