@@ -25,6 +25,9 @@ class TwentyFourtyEightTask(Q.ReinforcementTask):
         """Game ends when no more moves are possible"""
         return M.isGameOver(state)
 
+    def stateEq(state1, state2):
+        return (state1 == state2).all()
+
 
 class IndexedTask(Q.ReinforcementTask):
     """Same as TwentyFortyEightTask, but accepts an indexed number 0 to 3 as
@@ -42,3 +45,6 @@ class IndexedTask(Q.ReinforcementTask):
 
     def isEndState(state):
         return TwentyFourtyEightTask.isEndState(state)
+
+    def stateEq(state1, state2):
+        return TwentyFourtyEightTask.stateEq(state1, state2)
