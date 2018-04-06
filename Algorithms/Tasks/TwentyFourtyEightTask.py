@@ -29,7 +29,7 @@ class TwentyFourtyEightTask(Q.ReinforcementTask):
         return (state1 == state2).all()
 
 
-class IndexedTask(Q.ReinforcementTask):
+class IndexedTask(TwentyFourtyEightTask):
     """Same as TwentyFortyEightTask, but accepts an indexed number 0 to 3 as
     an action"""
     def transition(state, action):
@@ -39,12 +39,3 @@ class IndexedTask(Q.ReinforcementTask):
     def reward(state, action):
         actionEnum = M.fromIndex(action)
         return TwentyFourtyEightTask.reward(state, actionEnum)
-
-    def startState():
-        return TwentyFourtyEightTask.startState()
-
-    def isEndState(state):
-        return TwentyFourtyEightTask.isEndState(state)
-
-    def stateEq(state1, state2):
-        return TwentyFourtyEightTask.stateEq(state1, state2)
