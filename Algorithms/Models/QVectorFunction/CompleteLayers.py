@@ -26,14 +26,22 @@ class CompleteLayers:
         self.layer2 = self.denseLayer("layer2", 10, trainable=trainable)
         self.tensor2 = self.layer2.apply(self.tensor1)
 
-        self.action_layer = self.denseLayer("action_layer", numActions,
+        self.action_layer = self.finalLayer("action_layer",
+                                            numActions,
                                             trainable=trainable)
         self.actions = self.action_layer.apply(self.tensor2)
 
     def denseLayer(self, name, num_output=10, trainable=True):
         init = tf.initializers.random_normal()
         return tf.layers.Dense(units=num_output,
-                               activation=tf.sigmoid,
+                               activation=tf.nn.relu,
+                               kernel_initializer=init,
+                               bias_initializer=init,
+                               name=name)
+
+    def finalLayer(self, name, num_output, trainable=True):
+        init = tf.initializers.random_normal()
+        return tf.layers.Dense(units=num_output,
                                kernel_initializer=init,
                                bias_initializer=init,
                                name=name)

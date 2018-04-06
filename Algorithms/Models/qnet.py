@@ -51,9 +51,6 @@ class QNet(q.ReinforcementLearner):
     def close(self):
         self.sess.close()
 
-    def updateReference(self):
-        self.sess.run(self.updates)
-
     def _setGDLearningRate(self, learning_rate):
         self.sess.run(self.learning_rate_tf.assign(learning_rate))
 
@@ -81,14 +78,25 @@ class QNet(q.ReinforcementLearner):
         """Single state version of chooseActionBatch"""
         return self.chooseActionBatch([state])[0]
 
-    def observeResult(self, state, action, nextState, reward):
-        raise NotImplementedError("Function not implemented")
+    def save(self, filename):
+        """saves the session to the filename"""
+        saver = tf.train.Saver()
+        saver.save(self.sess, filename)
 
+    def load(self, filename):
+        """loads the session from the given file
+        should be the same model as was saved"""
+        saver = tf.train.Saver()
+        saver.restore(self.sess, filename)
+
+    def observeResult(self, state, action, nextState, reward):
         assert action >= 0 and action < self.numActions,\
             "action = {}, but must be from 0 to {}"\
             .format(action, self.numActions)
-        predicted = self.chooseAction(state)
-        q_next = max(self.chooseAction(nextState))
+
+        # run updates based on example
+        predicted = self.actionVector(state)
+        q_next = max(self.actionVector(nextState))
         actual = predicted.copy()
         # TODO: using learning rate in the conventional way should not be
         # needed for neural nets. It can instead be the learning rate of the
@@ -96,3 +104,6 @@ class QNet(q.ReinforcementLearner):
         actual[action] =\
             (1 - self.learning_rate) * actual[action] +\
             self.learning_rate * (reward + self.discount * q_next)
+
+        self.sess.run(self.train,
+                      {self.state: [state], self.target_actions: [actual]})

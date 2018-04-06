@@ -30,6 +30,9 @@ class ReinforcementTask:
     def isEndState(state):
         raise NotImplementedError("Function not implemented")
 
+    def stateEq(state1, state2):
+        raise NotImplementedError("Function not implemented")
+
 
 class ReinforcementLearner:
     """Defines a learning algorithm that can be trained on reinformcement
@@ -56,6 +59,10 @@ def LearnEpisode(learner, task, logState=do_nothing):
         copyState = state.copy()
         action = LearnStep(learner, task, state)
         logState(copyState, action)
+
+        # quit if the learner stalls
+        if task.stateEq(copyState, state):
+            break
 
     logState(state, None)
 
