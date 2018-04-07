@@ -1,6 +1,8 @@
 import Algorithms.QLearning as q
 import tensorflow as tf
 import numpy as np
+import random
+from util.random import bernoulli
 
 
 class QNet(q.ReinforcementLearner):
@@ -14,13 +16,26 @@ class QNet(q.ReinforcementLearner):
     def __init__(self,
                  makeFunction,
                  learning_rate=0.001,
-                 discount=0.9):
-        """Constructs a tensorflow graph on the default graph."""
+                 discount=0.9,
+                 epsilon=0.1):
+        """Constructs a tensorflow graph on the default graph.
+
+        Args:
+          makeFunction: constructs a tensorflow graph to use
+                        must have input tensor state
+                        output tensor actions
+          learning_rate: controls how fast the model will change based on
+                         new observations
+          discount: High discount factor will cause learning to concider future
+                    actions more heavily. 1 will concider any future reward
+                    to be just as important as the next reward
+          epsilon: how often to explore a random action"""
         # variables constant through initialization
 
         # settings
         self.discount = discount
         self.learning_rate = learning_rate
+        self.epsilon = epsilon
         self.learning_rate_tf =\
             tf.get_variable("learning_rate",
                             initializer=tf.constant(learning_rate))
@@ -72,7 +87,18 @@ class QNet(q.ReinforcementLearner):
         state: a list of states. Dimentions should be self.state.get_shape()
         """
         action_vec = self.actionVectorBatch(state)
-        return np.argmax(action_vec, 1)
+
+        result = np.argmax(action_vec, 1)
+        if self.epsilon > 0.000001:
+            mapExplore = np.vectorize(self.__exploreAction)
+            return mapExplore(result)
+        return result
+
+    def __exploreAction(self, action):
+        if bernoulli(self.epsilon) == 1:
+            return random.randrange(self.numActions)
+        else:
+            return action
 
     def chooseAction(self, state):
         """Single state version of chooseActionBatch"""
