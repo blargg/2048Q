@@ -12,6 +12,7 @@
 #   transition: State X Action -> State
 
 import pickle
+import collections
 from util.data import do_nothing
 
 
@@ -44,17 +45,27 @@ class ReinforcementLearner:
         raise NotImplementedError("Function not implemented")
 
 
+StepResult = collections.namedtuple('StepResult', ['action', 'reward'])
+
+
 def LearnStep(learner, task, state):
     chosenAction = learner.chooseAction(state)
     startState = state.copy()
     task.transition(state, chosenAction)
     reward = task.reward(startState, chosenAction)
     learner.observeResult(startState, chosenAction, state, reward)
-    return chosenAction
+    return StepResult(action=chosenAction,
+                      reward=reward)
+
+
+EpisodeResult = collections.namedtuple('EpisodeResult',
+                                       ['totalReward',
+                                        'endState'])
 
 
 def LearnEpisode(learner, task, logState=do_nothing):
     state = task.startState()
+    totalReward = 0
     while not task.isEndState(state):
         copyState = state.copy()
         action = LearnStep(learner, task, state)
@@ -65,6 +76,8 @@ def LearnEpisode(learner, task, logState=do_nothing):
             break
 
     logState(state, None)
+    return EpisodeResult(totalReward=totalReward,
+                         endState=state)
 
 
 def LearnEpisodeSaveFile(learner, task, filename):

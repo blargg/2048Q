@@ -138,3 +138,7 @@ def isGameOver(board):
         return False
 
     return True
+
+
+def highestTile(board):
+    return board.max()
