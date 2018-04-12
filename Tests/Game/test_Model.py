@@ -60,6 +60,10 @@ def test_game_over():
     endGameBoard = np.array(range(1, 17)).reshape((4, 4))
     assert isGameOver(endGameBoard), "No way to make empty space; game over"
 
+    endGameBoard = np.array(range(0, 16)).reshape((4, 4))
+    assert not isGameOver(endGameBoard),\
+        "There is still an empty space on the board, so the game continues"
+
 
 def rotate_board(board):
     """Takes a list and returns array"""
