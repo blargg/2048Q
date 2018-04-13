@@ -2,6 +2,7 @@ import Algorithms.QLearning as q
 import tensorflow as tf
 import numpy as np
 import random
+import math
 from util.random import bernoulli
 
 
@@ -17,7 +18,8 @@ class QNet(q.ReinforcementLearner):
                  makeFunction,
                  learning_rate=0.001,
                  discount=0.9,
-                 epsilon=0.1):
+                 epsilon=0.1,
+                 possibleActions=None):
         """Constructs a tensorflow graph on the default graph.
 
         Args:
@@ -29,13 +31,16 @@ class QNet(q.ReinforcementLearner):
           discount: High discount factor will cause learning to concider future
                     actions more heavily. 1 will concider any future reward
                     to be just as important as the next reward
-          epsilon: how often to explore a random action"""
+          epsilon: how often to explore a random action
+          possibleActions: function that accepts a state and returns a vector
+                           of possible actions (True for possible)"""
         # variables constant through initialization
 
         # settings
         self.discount = discount
         self.learning_rate = learning_rate
         self.epsilon = epsilon
+        self.possibleActions = possibleActions
         self.learning_rate_tf =\
             tf.get_variable("learning_rate",
                             initializer=tf.constant(learning_rate))
@@ -88,11 +93,27 @@ class QNet(q.ReinforcementLearner):
         """
         action_vec = self.actionVectorBatch(state)
 
+        action_vec = self.maskActions(action_vec, state)
         result = np.argmax(action_vec, 1)
         if self.epsilon > 0.000001:
             mapExplore = np.vectorize(self.__exploreAction)
             return mapExplore(result)
         return result
+
+    def maskActions(self, action_vec, states):
+        """If an action is not possible, based on our model knowledge, map it's
+        Q-value to Negative Infinity"""
+        if self.possibleActions is None:
+            return action_vec
+
+        def Qvalue(isPossible):
+            if isPossible:
+                return 0.0
+            else:
+                return -1 * math.inf
+        possible = np.array([self.possibleActions(state) for state in states])
+        mapQVal = np.vectorize(Qvalue)
+        return action_vec + mapQVal(possible)
 
     def __exploreAction(self, action):
         if bernoulli(self.epsilon) == 1:
