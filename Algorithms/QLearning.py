@@ -48,12 +48,13 @@ class ReinforcementLearner:
 StepResult = collections.namedtuple('StepResult', ['action', 'reward'])
 
 
-def LearnStep(learner, task, state):
+def RunStep(learner, task, state, train=True):
     chosenAction = learner.chooseAction(state)
     startState = state.copy()
     task.transition(state, chosenAction)
     reward = task.reward(startState, chosenAction)
-    learner.observeResult(startState, chosenAction, state, reward)
+    if train:
+        learner.observeResult(startState, chosenAction, state, reward)
     return StepResult(action=chosenAction,
                       reward=reward)
 
@@ -63,12 +64,12 @@ EpisodeResult = collections.namedtuple('EpisodeResult',
                                         'endState'])
 
 
-def LearnEpisode(learner, task, logState=do_nothing):
+def RunEpisode(learner, task, logState=do_nothing, train=True):
     state = task.startState()
     totalReward = 0
     while not task.isEndState(state):
         copyState = state.copy()
-        action = LearnStep(learner, task, state)
+        action = RunStep(learner, task, state, train=train)
         logState(copyState, action)
 
         # quit if the learner stalls
@@ -80,13 +81,13 @@ def LearnEpisode(learner, task, logState=do_nothing):
                          endState=state)
 
 
-def LearnEpisodeSaveFile(learner, task, filename):
+def RunEpisodeSaveFile(learner, task, filename, train=True):
     episodeRecord = []
 
     def logState(state, action):
         episodeRecord.append((state, action))
 
-    LearnEpisode(learner, task, logState)
+    RunEpisode(learner, task, logState, train=train)
 
     with open(filename, "wb") as f:
         pickle.dump(episodeRecord, f)  # TODO concider a safter alternative
