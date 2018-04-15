@@ -17,8 +17,10 @@ class CompleteLayers:
                  stateDims,
                  numActions,
                  trainable=True):
-        self.state = tf.placeholder(tf.float32, shape=[None] + stateDims)
-        self.state_flat = tf.layers.flatten(self.state)
+        # TODO decompose parts
+        self.state = tf.placeholder(tf.int32, shape=[None] + stateDims)
+        self.encoded = tf.one_hot(self.state, 10)
+        self.state_flat = tf.layers.flatten(self.encoded)
 
         self.layer1 = self.denseLayer("layer1", 10, trainable=trainable)
         self.tensor1 = self.layer1.apply(self.state_flat)
