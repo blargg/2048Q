@@ -16,6 +16,15 @@ import collections
 from util.data import do_nothing
 
 
+class Observation:
+    """A single observation of a reinforcement learning task"""
+    def __init__(self, startState, action, nextState, reward):
+        self.startState = startState
+        self.action = action
+        self.nextState = nextState
+        self.reward = reward
+
+
 class ReinforcementTask:
     """Defines a reinforcement learning task. This is an abstract interface to
     be implemented"""

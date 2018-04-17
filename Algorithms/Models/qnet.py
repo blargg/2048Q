@@ -4,6 +4,7 @@ import numpy as np
 import random
 import math
 from util.random import bernoulli
+from util.fifo import Fifo
 
 
 class QNet(q.ReinforcementLearner):
@@ -19,7 +20,8 @@ class QNet(q.ReinforcementLearner):
                  learning_rate=0.001,
                  discount=0.9,
                  epsilon=0.1,
-                 possibleActions=None):
+                 possibleActions=None,
+                 memorySize=200):
         """Constructs a tensorflow graph on the default graph.
 
         Args:
@@ -33,7 +35,8 @@ class QNet(q.ReinforcementLearner):
                     to be just as important as the next reward
           epsilon: how often to explore a random action
           possibleActions: function that accepts a state and returns a vector
-                           of possible actions (True for possible)"""
+                           of possible actions (True for possible)
+          memorySize: The number of recent observations to remember"""
         # variables constant through initialization
 
         # settings
@@ -44,6 +47,9 @@ class QNet(q.ReinforcementLearner):
         self.learning_rate_tf =\
             tf.get_variable("learning_rate",
                             initializer=tf.constant(learning_rate))
+
+        # initialize memory
+        self.recentObservations = Fifo(memorySize)
 
         # Q-function construction
         self.q_function = makeFunction(trainable=True)
@@ -137,10 +143,30 @@ class QNet(q.ReinforcementLearner):
         saver.restore(self.sess, filename)
 
     def observeResult(self, state, action, nextState, reward):
+        obs = q.Observation(state, action, nextState, reward)
+        self.recentObservations.add(obs)
+        if self.recentObservations.nextAddCycles():
+            self.trainRecent()
+
+    def trainRecent(self):
+        indecies = [i for i in range(self.recentObservations.size())]
+        random.shuffle(indecies)
+        for i in indecies:
+            observation = self.recentObservations.getElement(i)
+            self.trainObservation(observation)
+
+    def trainObservation(self, observation):
+        self.trainStep(observation.startState,
+                       observation.action,
+                       observation.nextState,
+                       observation.reward)
+
+    def trainStep(self, state, action, nextState, reward):
         assert action >= 0 and action < self.numActions,\
             "action = {}, but must be from 0 to {}"\
             .format(action, self.numActions)
 
+        # TODO make a batch version
         # run updates based on example
         predicted = self.actionVector(state)
         q_next = max(self.actionVector(nextState))
