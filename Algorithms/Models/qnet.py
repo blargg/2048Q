@@ -19,7 +19,7 @@ class QNet(q.ReinforcementLearner):
                  makeFunction,
                  learning_rate=0.001,
                  discount=0.9,
-                 epsilon=0.1,
+                 epsilon=0.0,
                  possibleActions=None,
                  memorySize=200):
         """Constructs a tensorflow graph on the default graph.
@@ -52,6 +52,7 @@ class QNet(q.ReinforcementLearner):
         self.recentObservations = Fifo(memorySize)
 
         # Q-function construction
+        # TODO need to scope function construction
         self.q_function = makeFunction(trainable=True)
         self.state = self.q_function.state
         self.actions = self.q_function.actions
@@ -76,6 +77,9 @@ class QNet(q.ReinforcementLearner):
 
     def close(self):
         self.sess.close()
+
+    def setKeepProb(self, prob):
+        self.sess.run(self.q_function.keep_prob.assign(prob))
 
     def _setGDLearningRate(self, learning_rate):
         self.sess.run(self.learning_rate_tf.assign(learning_rate))
@@ -102,6 +106,7 @@ class QNet(q.ReinforcementLearner):
         action_vec = self.maskActions(action_vec, state)
         result = np.argmax(action_vec, 1)
         if self.epsilon > 0.000001:
+            # TODO, should obey maskActions
             mapExplore = np.vectorize(self.__exploreAction)
             return mapExplore(result)
         return result

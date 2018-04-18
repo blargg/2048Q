@@ -16,27 +16,40 @@ class CompleteLayers:
     def __init__(self,
                  stateDims,
                  numActions,
-                 trainable=True):
+                 trainable=True,
+                 keep_prob=None):
+        # Variables
+        if keep_prob is None:
+            self.keep_prob =\
+                tf.get_variable("keep_prob",
+                                initializer=tf.constant(1.0),
+                                trainable=False)
+        else:
+            self.keep_prob = keep_prob
+
         # TODO decompose parts
         self.state = tf.placeholder(tf.int32, shape=[None] + stateDims)
         self.encoded = tf.one_hot(self.state, 10)
-        self.state_flat = tf.layers.flatten(self.encoded)
+        self.dropout_state = tf.nn.dropout(self.encoded, self.keep_prob)
+        self.state_flat = tf.layers.flatten(self.dropout_state)
 
         self.layer1 = self.denseLayer("layer1", 10, trainable=trainable)
         self.tensor1 = self.layer1.apply(self.state_flat)
+        self.dropout1 = tf.nn.dropout(self.tensor1, self.keep_prob)
 
         self.layer2 = self.denseLayer("layer2", 10, trainable=trainable)
-        self.tensor2 = self.layer2.apply(self.tensor1)
+        self.tensor2 = self.layer2.apply(self.dropout1)
+        self.dropout2 = tf.nn.dropout(self.tensor2, self.keep_prob)
 
         self.action_layer = self.finalLayer("action_layer",
                                             numActions,
                                             trainable=trainable)
-        self.actions = self.action_layer.apply(self.tensor2)
+        self.actions = self.action_layer.apply(self.dropout2)
 
     def denseLayer(self, name, num_output=10, trainable=True):
         init = tf.initializers.random_normal()
         return tf.layers.Dense(units=num_output,
-                               activation=tf.nn.relu,
+                               activation=tf.nn.softplus,
                                kernel_initializer=init,
                                bias_initializer=init,
                                name=name)
