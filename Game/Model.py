@@ -1,6 +1,7 @@
 from enum import Enum, unique
 import numpy as np
 import random
+import math
 
 
 @unique
@@ -41,6 +42,11 @@ def newBoard():
     board = emptyBoard()
     addRandomBlock(board)
     return board
+
+
+def randomBoard(smallest=0, largest=10):
+    vals = [math.floor(random.uniform(smallest, largest+1)) for _ in range(16)]
+    return np.reshape(vals, (4, 4))
 
 
 def printBoard(board):
