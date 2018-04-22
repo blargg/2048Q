@@ -5,6 +5,9 @@ class Empty:
     def __init__(self):
         pass
 
+    def isEmpty(obj):
+        return type(obj) is Empty
+
 
 class Fifo:
     """Creates a list of elements with a finite size. When elements are added
@@ -31,12 +34,14 @@ class Fifo:
 
     def getElement(self, index):
         assert index < self.maxSize, "Index out of bounds of maxSize"
-        assert type(self.elements[index]) is not Empty,\
+        assert not Empty.isEmpty(self.elements[index]),\
             "Index has not been populated yet"
         return self.elements[self.modIndex(self.nextInsertIndex + index)]
 
     def size(self):
-        return len(self.elements)
+        elems = [x for x in
+                 filter(lambda e: not Empty.isEmpty(e), self.elements)]
+        return len(elems)
 
     def getMaxSize(self):
         return self.maxSize
