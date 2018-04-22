@@ -1,6 +1,7 @@
 from enum import Enum, unique
 import numpy as np
 import random
+import math
 
 
 @unique
@@ -41,6 +42,11 @@ def newBoard():
     board = emptyBoard()
     addRandomBlock(board)
     return board
+
+
+def randomBoard(smallest=0, largest=10):
+    vals = [math.floor(random.uniform(smallest, largest+1)) for _ in range(16)]
+    return np.reshape(vals, (4, 4))
 
 
 def printBoard(board):
@@ -114,29 +120,39 @@ def act(board, action):
     addRandomBlock(board)
 
 
+def possibleAction(board, action):
+    """Checks if the action will continue the game.
+    An action does not continue the game if the shiftBoard action will not
+    create an empty space to place a new tile"""
+    # TODO this can be more efficient
+    # as soon as we collapse 2 squares, or find a 0, we know it's possible
+    shift = board.copy()
+    shiftBoard(shift, action)
+    if np.any(shift == 0):
+        return True
+    return False
+
+
+def possibleActionVector(board):
+    """Returns a array of possible actions. The index in the array is the
+    action, the value at that index is 1 if the action is possible,
+    or 0 otherwise"""
+    actions = [False for x in range(len(Action))]
+
+    for a in Action:
+        if possibleAction(board, a):
+            actions[toIndex(a)] = True
+    return actions
+
+
 def isGameOver(board):
-    """Game ends when there is no way to shift the board to make empty
-    spaces"""
-    left = board.copy()
-    shiftBoard(left, Action.LEFT)
-    if np.any(left == 0):
-        return False
+    """Game ends when there are no possible actions.
+    See possibleAction."""
 
-    right = board.copy()
-    shiftBoard(right, Action.RIGHT)
-    if np.any(right == 0):
-        return False
-
-    up = board.copy()
-    shiftBoard(up, Action.UP)
-    if np.any(up == 0):
-        return False
-
-    down = board.copy()
-    shiftBoard(down, Action.DOWN)
-    if np.any(down == 0):
-        return False
-
+    # TODO would like to make an iterable for this and possibleActionVector
+    for a in Action:
+        if possibleAction(board, a):
+            return False
     return True
 
 
