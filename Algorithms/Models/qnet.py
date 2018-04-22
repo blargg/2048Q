@@ -52,10 +52,14 @@ class QNet(q.ReinforcementLearner):
         self.recentObservations = Fifo(memorySize)
 
         # Q-function construction
-        # TODO need to scope function construction
-        self.q_function = makeFunction(trainable=True)
+        with tf.variable_scope("QFunction"):
+            self.q_function = makeFunction(trainable=True)
         self.state = self.q_function.state
         self.actions = self.q_function.actions
+
+        # Reference Q-function
+        with tf.variable_scope("QReference"):
+            self.q_reference = makeFunction(trainable=False)
 
         # placholder for target action vector
         self.target_actions = tf.placeholder(self.actions.dtype,
@@ -78,6 +82,11 @@ class QNet(q.ReinforcementLearner):
     def close(self):
         self.sess.close()
 
+    def copyQFuncToReference(self):
+        vars = self.q_function.get_all_variables()
+        refs = self.q_reference.get_all_variables()
+        self.sess.run([ref.assign(var) for (var, ref) in zip(vars, refs)])
+
     def setKeepProb(self, prob):
         self.sess.run(self.q_function.keep_prob.assign(prob))
 
@@ -95,6 +104,18 @@ class QNet(q.ReinforcementLearner):
     def actionVector(self, state):
         """Single state variant of actionVectorBatch"""
         return self.actionVectorBatch([state])[0]
+
+    def actionsAndRefBatch(self, startStates, nextStates):
+        tensors = (self.actions, self.q_reference.actions)
+        inputs = {self.state: startStates,
+                  self.q_reference.state: nextStates}
+        return self.sess.run(tensors, inputs)
+
+    def actionAndRef(self, startState, nextState):
+        startStates = [startState]
+        nextStates = [nextState]
+        (actions, refs) = self.actionsAndRefBatch(startStates, nextStates)
+        return (actions[0], refs[0])
 
     def chooseActionBatch(self, state):
         """Evaluates the model and selects the action with the highest Q-value
@@ -154,9 +175,11 @@ class QNet(q.ReinforcementLearner):
             self.trainRecent()
 
     def trainRecent(self):
+        self.copyQFuncToReference()
         indecies = [i for i in range(self.recentObservations.size())]
         random.shuffle(indecies)
         for i in indecies:
+            # TODO only get populated indecies
             observation = self.recentObservations.getElement(i)
             self.trainObservation(observation)
 
@@ -173,9 +196,10 @@ class QNet(q.ReinforcementLearner):
 
         # TODO make a batch version
         # run updates based on example
-        predicted = self.actionVector(state)
-        q_next = max(self.actionVector(nextState))
-        actual = predicted.copy()
+
+        (actionVals, nextActionVals) = self.actionAndRef(state, nextState)
+        q_next = max(nextActionVals)
+        actual = actionVals.copy()
         # TODO: using learning rate in the conventional way should not be
         # needed for neural nets. It can instead be the learning rate of the
         # gradient descent step.

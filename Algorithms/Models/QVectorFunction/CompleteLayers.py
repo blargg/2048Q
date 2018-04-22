@@ -35,16 +35,24 @@ class CompleteLayers:
 
         self.layer1 = self.denseLayer("layer1", 10, trainable=trainable)
         self.tensor1 = self.layer1.apply(self.state_flat)
-        self.dropout1 = tf.nn.dropout(self.tensor1, self.keep_prob)
+        if trainable:
+            self.dropout1 = tf.nn.dropout(self.tensor1, self.keep_prob)
+            layer1_output = self.dropout1
+        else:
+            layer1_output = self.tensor1
 
         self.layer2 = self.denseLayer("layer2", 10, trainable=trainable)
-        self.tensor2 = self.layer2.apply(self.dropout1)
-        self.dropout2 = tf.nn.dropout(self.tensor2, self.keep_prob)
+        self.tensor2 = self.layer2.apply(layer1_output)
+        if trainable:
+            self.dropout2 = tf.nn.dropout(self.tensor2, self.keep_prob)
+            layer2_output = self.dropout2
+        else:
+            layer2_output = self.tensor2
 
         self.action_layer = self.finalLayer("action_layer",
                                             numActions,
                                             trainable=trainable)
-        self.actions = self.action_layer.apply(self.dropout2)
+        self.actions = self.action_layer.apply(layer2_output)
 
     def denseLayer(self, name, num_output=10, trainable=True):
         init = tf.initializers.random_normal()
