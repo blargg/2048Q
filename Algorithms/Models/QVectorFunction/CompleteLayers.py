@@ -1,4 +1,6 @@
 import tensorflow as tf
+
+from Algorithms.Models.QVectorFunction import OneHotBoard
 from util.tensorflow.DenseLayers import DenseLayers
 
 
@@ -31,20 +33,15 @@ class CompleteLayers:
         else:
             self.keep_prob = keep_prob
 
-        # TODO decompose parts
-        self.state = tf.placeholder(tf.int32, shape=[None] + stateDims)
-        self.encoded = tf.one_hot(self.state, 10)
-        encodedState = self.encoded
-        if self.keep_prob is not None:
-            self.dropout_state = tf.nn.dropout(self.encoded, self.keep_prob)
-            encodedState = self.dropout_state
-        self.state_flat = tf.layers.flatten(encodedState)
+        self.boardPlaceholder = OneHotBoard()
+        self.state = self.boardPlaceholder.input_state
 
         layerSizes = [10, 10]
         self.denseLayers = DenseLayers(layerSizes,
                                        trainable=trainable,
                                        keep_prob=self.keep_prob)
-        lastLayer = self.denseLayers.apply(self.state_flat)
+        lastLayer = self.denseLayers \
+            .apply(self.boardPlaceholder.state_representation)
 
         self.action_layer = self.finalLayer("action_layer",
                                             numActions,
