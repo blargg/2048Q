@@ -20,7 +20,10 @@ class CompleteLayers:
                  trainable=True,
                  keep_prob=None):
         # Variables
-        if keep_prob is None:
+        if not trainable:
+            # if not training, then don't use dropout
+            self.keep_prob = None
+        elif keep_prob is None:
             self.keep_prob =\
                 tf.get_variable("keep_prob",
                                 initializer=tf.constant(1.0),
@@ -31,8 +34,11 @@ class CompleteLayers:
         # TODO decompose parts
         self.state = tf.placeholder(tf.int32, shape=[None] + stateDims)
         self.encoded = tf.one_hot(self.state, 10)
-        self.dropout_state = tf.nn.dropout(self.encoded, self.keep_prob)
-        self.state_flat = tf.layers.flatten(self.dropout_state)
+        encodedState = self.encoded
+        if self.keep_prob is not None:
+            self.dropout_state = tf.nn.dropout(self.encoded, self.keep_prob)
+            encodedState = self.dropout_state
+        self.state_flat = tf.layers.flatten(encodedState)
 
         layerSizes = [10, 10]
         self.denseLayers = DenseLayers(layerSizes,
@@ -50,6 +56,7 @@ class CompleteLayers:
         return tf.layers.Dense(units=num_output,
                                kernel_initializer=init,
                                bias_initializer=init,
+                               trainable=trainable,
                                name=name)
 
     def get_all_variables(self):
@@ -69,6 +76,7 @@ def mkConstructor(inputDims, outputDims):
         """Constructs a CompleteLayers Graph component in tensorflow.
         All variables will be trainable based on the argument to this
         function"""
-        return CompleteLayers(inputDims, outputDims)
+        return CompleteLayers(inputDims, outputDims,
+                              trainable=trainable)
 
     return construct
