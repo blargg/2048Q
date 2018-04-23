@@ -1,10 +1,10 @@
 import tensorflow as tf
 
-from Algorithms.Models.QVectorFunction import OneHotBoard
+from Algorithms.Models.QVectorFunction.BoardRepresentations import OneHotBoard
 from util.tensorflow.DenseLayers import DenseLayers
 
 
-class CompleteLayers:
+class ConnectedActions:
     """Constructs the q-function model for QNet
     Network consists of 3 layers, were every output in the pervious layer
     connects to the next layer.
@@ -68,12 +68,12 @@ class CompleteLayers:
 
 def mkConstructor(inputDims, outputDims):
     """Helper to make a constructor function whose arguments match qnet.
-    Returns function of type (Trainable:Bool) -> CompleteLayers"""
+    Returns function of type (Trainable:Bool) -> ConnectedActions"""
     def construct(trainable=True):
-        """Constructs a CompleteLayers Graph component in tensorflow.
+        """Constructs a ConnectedActions Graph component in tensorflow.
         All variables will be trainable based on the argument to this
         function"""
-        return CompleteLayers(inputDims, outputDims,
-                              trainable=trainable)
+        return ConnectedActions(inputDims, outputDims,
+                                trainable=trainable)
 
     return construct
