@@ -33,7 +33,7 @@ class ConnectedActions:
         else:
             self.keep_prob = keep_prob
 
-        self.boardPlaceholder = OneHotBoard()
+        self.boardPlaceholder = OneHotBoard(stateDims)
         self.state = self.boardPlaceholder.input_state
 
         layerSizes = [10, 10]
