@@ -179,7 +179,6 @@ class QNet(q.ReinforcementLearner):
         indecies = [i for i in range(self.recentObservations.size())]
         random.shuffle(indecies)
         for i in indecies:
-            # TODO only get populated indecies
             observation = self.recentObservations.getElement(i)
             self.trainObservation(observation)
 
