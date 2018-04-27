@@ -6,8 +6,22 @@ import numpy as np
 from Game.Model import shiftValues, isGameOver, shiftBoard, Action
 import Game.Model as g
 
+
+def listOfSize(elements, size):
+    return st.lists(elements, min_size=size, max_size=size)
+
+
 # sampling strategies
 actions = st.sampled_from([Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT])
+
+
+def boards(minVal=0, maxVal=15):
+    lists = listOfSize(st.integers(minVal, maxVal), 16)
+
+    def shapeToBoard(elems):
+        return np.reshape(elems, (4, 4))
+
+    return lists.map(shapeToBoard)
 
 
 @given(st.integers(0, 3))
@@ -20,7 +34,7 @@ def test_index_iso_to_action(index):
 def test_shift_ends_with_zeros(xs):
     """Tests that after the list is shifted,
     the first zero is only followed by zeros"""
-    lst = shiftValues(xs)
+    (lst, _) = shiftValues(xs)
     afterZero = False
     for x in lst:
         if x == 0:
@@ -38,7 +52,7 @@ def test_shift_perserves_sq_sum(xs):
         return sum([2 ** l for l in ls])
 
     original_sum = sq_sum(xs)
-    shifted = shiftValues(xs)
+    (shifted, _) = shiftValues(xs)
     shifted_sum = sq_sum(shifted)
     assert original_sum == shifted_sum,\
         "Sum of squares elements should not change after shifting"
@@ -46,13 +60,28 @@ def test_shift_perserves_sq_sum(xs):
 
 @given(st.lists(st.integers(0, 100)))
 def test_always_same_length(xs):
-    lst = shiftValues(xs)
+    (lst, _) = shiftValues(xs)
     assert len(lst) == len(xs)
+
+
+@given(st.lists(st.integers(0, 15)))
+def test_shiftValues_nonNegative(xs):
+    (_, score) = shiftValues(xs)
+    assert score >= 0, \
+        "Score should always be non-negative"
+
+
+@given(boards(),
+       actions)
+def test_act_score_nonNegative(board, action):
+    score = g.act(board, action)
+    assert score >= 0, \
+        "Score should always be non-negative"
 
 
 def test_shiftValues():
     initial = [1, 1, 0, 2, 0, 2, 2, 2]
-    result = shiftValues(initial)
+    (result, _) = shiftValues(initial)
     assert result == [2, 3, 3, 0, 0, 0, 0, 0], "Must match this example case"
 
 
@@ -86,14 +115,10 @@ def rotate_action(action):
     return None
 
 
-def listOfSize(elements, size):
-    return st.lists(elements, min_size=size, max_size=size)
-
-
 @given(actions,
-       listOfSize(listOfSize(st.integers(0, 100), 4), 4))
+       boards(0, 100))
 def test_rotationalSym(action, board):
-    board1 = np.array(board)
+    board1 = board
     board2 = rotate_board(board1.copy())
     action1 = action
     action2 = rotate_action(action)
