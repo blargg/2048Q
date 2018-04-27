@@ -31,9 +31,6 @@ class ReinforcementTask:
     def transition(state, action):
         raise NotImplementedError("Function not implemented")
 
-    def reward(state, action):
-        raise NotImplementedError("Function not implemented")
-
     def startState():
         raise NotImplementedError("Function not implemented")
 
@@ -60,8 +57,7 @@ StepResult = collections.namedtuple('StepResult', ['action', 'reward'])
 def RunStep(learner, task, state, train=True):
     chosenAction = learner.chooseAction(state)
     startState = state.copy()
-    task.transition(state, chosenAction)
-    reward = task.reward(startState, chosenAction)
+    reward = task.transition(state, chosenAction)
     if train:
         learner.observeResult(startState, chosenAction, state, reward)
     return StepResult(action=chosenAction,
