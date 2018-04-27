@@ -196,6 +196,9 @@ class QNet(q.ReinforcementLearner):
         # TODO make a batch version
         # run updates based on example
 
+        # TODO, use dropout for action selection, but not training
+        # I suspect it's causing problems with trianing, as the traning will
+        # have different connections drop out, and looses association
         (actionVals, nextActionVals) = self.actionAndRef(state, nextState)
         q_next = max(nextActionVals)
         actual = actionVals.copy()
