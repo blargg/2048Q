@@ -188,6 +188,23 @@ class QNet(q.ReinforcementLearner):
                        observation.nextState,
                        observation.reward)
 
+    def trainProcessed(self, states, actions, processedRewards):
+        actionVec = self.actionVectorBatch(states)
+
+        for (i, (action, reward)) in enumerate(zip(actions, processedRewards)):
+            assert action >= 0 and action < self.numActions,\
+                "action = {}, but must be from 0 to {}"\
+                .format(action, self.numActions)
+            actionVec[i][action] = reward
+        self.sess.run(self.train,
+                      {self.state: states,
+                       self.target_actions: actionVec})
+
+    def trainProcessedEpisode(self, episode):
+        self.trainProcessed(episode.states,
+                            episode.actions,
+                            episode.processedRewards(self.discount))
+
     def trainStep(self, state, action, nextState, reward):
         assert action >= 0 and action < self.numActions,\
             "action = {}, but must be from 0 to {}"\
