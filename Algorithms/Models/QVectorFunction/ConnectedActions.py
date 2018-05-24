@@ -1,7 +1,10 @@
 import tensorflow as tf
 
+from Algorithms.Models.QVectorFunction.BoardRepresentations import OneHotBoard
+from util.tensorflow.DenseLayers import DenseLayers
 
-class CompleteLayers:
+
+class ConnectedActions:
     """Constructs the q-function model for QNet
     Network consists of 3 layers, were every output in the pervious layer
     connects to the next layer.
@@ -19,7 +22,10 @@ class CompleteLayers:
                  trainable=True,
                  keep_prob=None):
         # Variables
-        if keep_prob is None:
+        if not trainable:
+            # if not training, then don't use dropout
+            self.keep_prob = None
+        elif keep_prob is None:
             self.keep_prob =\
                 tf.get_variable("keep_prob",
                                 initializer=tf.constant(1.0),
@@ -27,46 +33,27 @@ class CompleteLayers:
         else:
             self.keep_prob = keep_prob
 
-        # TODO decompose parts
-        self.state = tf.placeholder(tf.int32, shape=[None] + stateDims)
-        self.encoded = tf.one_hot(self.state, 10)
-        self.dropout_state = tf.nn.dropout(self.encoded, self.keep_prob)
-        self.state_flat = tf.layers.flatten(self.dropout_state)
+        self.boardPlaceholder = OneHotBoard(stateDims)
+        self.state = self.boardPlaceholder.input_state
 
-        self.layer1 = self.denseLayer("layer1", 10, trainable=trainable)
-        self.tensor1 = self.layer1.apply(self.state_flat)
-        if trainable:
-            self.dropout1 = tf.nn.dropout(self.tensor1, self.keep_prob)
-            layer1_output = self.dropout1
-        else:
-            layer1_output = self.tensor1
-
-        self.layer2 = self.denseLayer("layer2", 10, trainable=trainable)
-        self.tensor2 = self.layer2.apply(layer1_output)
-        if trainable:
-            self.dropout2 = tf.nn.dropout(self.tensor2, self.keep_prob)
-            layer2_output = self.dropout2
-        else:
-            layer2_output = self.tensor2
+        layerSizes = [10, 10]
+        self.denseLayers = DenseLayers(layerSizes,
+                                       trainable=trainable,
+                                       keep_prob=self.keep_prob)
+        lastLayer = self.denseLayers \
+            .apply(self.boardPlaceholder.state_representation)
 
         self.action_layer = self.finalLayer("action_layer",
                                             numActions,
                                             trainable=trainable)
-        self.actions = self.action_layer.apply(layer2_output)
-
-    def denseLayer(self, name, num_output=10, trainable=True):
-        init = tf.initializers.random_normal()
-        return tf.layers.Dense(units=num_output,
-                               activation=tf.nn.softplus,
-                               kernel_initializer=init,
-                               bias_initializer=init,
-                               name=name)
+        self.actions = self.action_layer.apply(lastLayer)
 
     def finalLayer(self, name, num_output, trainable=True):
         init = tf.initializers.random_normal()
         return tf.layers.Dense(units=num_output,
                                kernel_initializer=init,
                                bias_initializer=init,
+                               trainable=trainable,
                                name=name)
 
     def get_all_variables(self):
@@ -74,21 +61,19 @@ class CompleteLayers:
         interable. The variables are returned in a consistant order, such that
         copying the variable to another version of this object in order will
         produce the same function"""
-        return [self.layer1.kernel,
-                self.layer1.bias,
-                self.layer2.kernel,
-                self.layer2.bias,
-                self.action_layer.kernel,
-                self.action_layer.bias]
+        return self.denseLayers.allVariables() +\
+            [self.action_layer.kernel,
+             self.action_layer.bias]
 
 
 def mkConstructor(inputDims, outputDims):
     """Helper to make a constructor function whose arguments match qnet.
-    Returns function of type (Trainable:Bool) -> CompleteLayers"""
+    Returns function of type (Trainable:Bool) -> ConnectedActions"""
     def construct(trainable=True):
-        """Constructs a CompleteLayers Graph component in tensorflow.
+        """Constructs a ConnectedActions Graph component in tensorflow.
         All variables will be trainable based on the argument to this
         function"""
-        return CompleteLayers(inputDims, outputDims)
+        return ConnectedActions(inputDims, outputDims,
+                                trainable=trainable)
 
     return construct

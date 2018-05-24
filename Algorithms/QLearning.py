@@ -31,9 +31,6 @@ class ReinforcementTask:
     def transition(state, action):
         raise NotImplementedError("Function not implemented")
 
-    def reward(state, action):
-        raise NotImplementedError("Function not implemented")
-
     def startState():
         raise NotImplementedError("Function not implemented")
 
@@ -60,8 +57,7 @@ StepResult = collections.namedtuple('StepResult', ['action', 'reward'])
 def RunStep(learner, task, state, train=True):
     chosenAction = learner.chooseAction(state)
     startState = state.copy()
-    task.transition(state, chosenAction)
-    reward = task.reward(startState, chosenAction)
+    reward = task.transition(state, chosenAction)
     if train:
         learner.observeResult(startState, chosenAction, state, reward)
     return StepResult(action=chosenAction,
@@ -88,6 +84,50 @@ def RunEpisode(learner, task, logState=do_nothing, train=True):
     logState(state, None)
     return EpisodeResult(totalReward=totalReward,
                          endState=state)
+
+
+class Episode:
+    def __init__(self, states, actions, rewards, finalState=None):
+        self.states = states
+        self.actions = actions
+        self.rewards = rewards
+        self.finalState = finalState
+
+    def processedRewards(self, discountFactor):
+        """Processes the rewards, so that previous (state, action) values get
+        reward for future results"""
+        assert discountFactor >= 0 and discountFactor <= 1,\
+            "discountFactor must be between 0 and 1"
+        processedRewards = collections.deque()
+
+        pReward = 0
+
+        for actual_reward in self.rewards[::-1]:
+            pReward = actual_reward + discountFactor * pReward
+            processedRewards.appendleft(pReward)
+
+        return processedRewards
+
+
+def SimulateEpisode(learner, task):
+    """Runs an episode to completion, returns the states, chosen actions and
+    rewards"""
+    state = task.startState()
+    rewards = []
+    states = []
+    actions = []
+    while not task.isEndState(state):
+        curState = state.copy()
+        action = learner.chooseAction(state)
+        reward = task.transition(state, action)
+        actions.append(action)
+        states.append(curState)
+        rewards.append(reward)
+
+    return Episode(states=states,
+                   actions=actions,
+                   rewards=rewards,
+                   finalState=state)
 
 
 def RunEpisodeSaveFile(learner, task, filename, train=True):

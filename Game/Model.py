@@ -59,10 +59,14 @@ def shiftValues(row):
     """Shifts values over to the left, merging equal values.
     Merged values increment by one from the pre-merge values
     Assumes all values are numeric.
+
+    Returns:
+      (shifted row, score increase)
     """
     assert all([elem >= 0 for elem in row]),\
         "all the elements must be greater than one"
     nextRow = []
+    scoreIncrease = 0
     lastValue = None
     for val in row:
         if val == 0:
@@ -72,6 +76,7 @@ def shiftValues(row):
         elif lastValue == val:
             lastValue = None
             nextRow.append(val+1)
+            scoreIncrease += 2 ** (val + 1)
         else:
             nextRow.append(lastValue)
             lastValue = val
@@ -79,7 +84,7 @@ def shiftValues(row):
         nextRow.append(lastValue)
     lendiff = len(row) - len(nextRow)
     nextRow.extend([0 for x in range(lendiff)])
-    return nextRow
+    return (nextRow, scoreIncrease)
 
 
 def shiftBoard(board, action):
@@ -88,19 +93,30 @@ def shiftBoard(board, action):
     assert isinstance(board, np.ndarray), \
         "assume these are numpy arrays"
     shape = board.shape
+    totalScore = 0
 
     if action == Action.UP:
         for i in range(shape[1]):
-            board[:, i] = shiftValues(board[:, i])
+            (row, score) = shiftValues(board[:, i])
+            totalScore += score
+            board[:, i] = row
     elif action == Action.DOWN:
         for i in range(shape[1]):
-            board[::-1, i] = shiftValues(board[::-1, i])
+            (row, score) = shiftValues(board[::-1, i])
+            totalScore += score
+            board[::-1, i] = row
     elif action == Action.RIGHT:
         for i in range(shape[0]):
-            board[i, ::-1] = shiftValues(board[i, ::-1])
+            (row, score) = shiftValues(board[i, ::-1])
+            totalScore += score
+            board[i, ::-1] = row
     else:
         for i in range(shape[0]):
-            board[i, :] = shiftValues(board[i, :])
+            (row, score) = shiftValues(board[i, :])
+            totalScore += score
+            board[i, :] = row
+
+    return totalScore
 
 
 def randomBlock():
@@ -116,8 +132,14 @@ def addRandomBlock(board):
 
 
 def act(board, action):
-    shiftBoard(board, action)
+    """Act on the board, shifting in one direction and merging tiles
+    The adds a random block to an empty space on the board
+
+    Returns: The amount of points earned by this action
+    """
+    score = shiftBoard(board, action)
     addRandomBlock(board)
+    return score
 
 
 def possibleAction(board, action):

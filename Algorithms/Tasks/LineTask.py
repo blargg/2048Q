@@ -30,6 +30,7 @@ class LineTask(ReinforcementTask):
     are numbers to jump to. Higher rewards for getting close to 0"""
     def transition(state, action):
         state.set(action)
+        return LineTask.reward(state, action)
 
     def reward(state, action):
         baseReward = 1 / (1 + abs(action))
