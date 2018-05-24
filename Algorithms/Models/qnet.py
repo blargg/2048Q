@@ -88,7 +88,8 @@ class QNet(q.ReinforcementLearner):
         self.sess.run([ref.assign(var) for (var, ref) in zip(vars, refs)])
 
     def setKeepProb(self, prob):
-        self.sess.run(self.q_function.keep_prob.assign(prob))
+        self.keep_prob = prob
+        self.sess.run(self.q_function.keep_prob.assign(self.keep_prob))
 
     def _setGDLearningRate(self, learning_rate):
         self.sess.run(self.learning_rate_tf.assign(learning_rate))
@@ -196,9 +197,14 @@ class QNet(q.ReinforcementLearner):
                 "action = {}, but must be from 0 to {}"\
                 .format(action, self.numActions)
             actionVec[i][action] = reward
+
+        # When training, disable dropout. Dropout will have been re-randomized
+        # from when action is selected, which breaks a lot of corelations
+        self.sess.run(self.q_function.keep_prob.assign(1))
         self.sess.run(self.train,
                       {self.state: states,
                        self.target_actions: actionVec})
+        self.sess.run(self.q_function.keep_prob.assign(self.keep_prob))
 
     def trainProcessedEpisode(self, episode):
         self.trainProcessed(episode.states,
